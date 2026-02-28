@@ -1,0 +1,122 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nf-utils"
+version = "0.1.0"
+description = "精简高效的 Python 工具集"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    {name = "东方即白", email = "netfere@gmail.com"}
+]
+license = "MIT"
+keywords = [
+    "utils",
+    "cache",
+    "result",
+    "datetime",
+    "enum",
+    "scheduler",
+    "patterns",
+    "configuration",
+    "logging",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+]
+
+dependencies = [
+    "typing-extensions>=4.0.0; python_version < '3.11'",
+]
+
+[project.optional-dependencies]
+env = [
+    "python-dotenv>=1.0.0",
+]
+scheduler = [
+    "APScheduler>=3.10.0,<4.0.0",
+    "tzlocal>=5.0.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+full = ["nf-utils[env,scheduler]"]
+all = ["nf-utils[full,dev]"]
+
+[project.urls]
+Homepage = "https://github.com/netfere/nf-utils"
+Repository = "https://github.com/netfere/nf-utils"
+Documentation = "https://github.com/netfere/nf-utils#readme"
+"Bug Tracker" = "https://github.com/netfere/nf-utils/issues"
+
+[tool.setuptools]
+packages = ["utils"]
+package-dir = {"utils" = "src"}
+
+[tool.setuptools.package-data]
+"*" = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--verbose",
+    "--strict-markers",
+    "--tb=short",
+    "--cov=utils",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+]
+
+[tool.coverage.run]
+source = ["utils"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "if sys.version_info",
+]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP"]
+ignore = ["E501"]  # 行长度由 formatter 处理
