@@ -567,6 +567,9 @@ class DateTime(_datetime):
 
         return self.strftime(fmt)
 
+    def to_string(self, fmt: str = None) -> str:
+        return self.format(fmt)
+
     def __str__(self) -> str:
         """字符串表示（默认格式）"""
         return self.format()
