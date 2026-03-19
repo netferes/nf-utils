@@ -920,7 +920,7 @@ class DateTime(_datetime):
         - 如果 self <= now，从 now 延期
 
         Args:
-            value: 延期时长（支持表达式 "3d" 或秒数）
+            value: 延期时长（支持表达式 "3d" 或秒数），当为数值时仅表示秒数
 
         示例:
             >>> expired = DateTime("2024-01-01")  # 已过期
