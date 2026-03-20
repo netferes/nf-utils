@@ -27,7 +27,7 @@ def override_config(config:dict, new_config:dict) -> dict:
 
     return {**config}
 
-def load_config(config_path:Path=None, dev_config_path:Path=None) -> dict:
+def load_config(config_path:Path=None,global_config:Path=None) -> dict:
     """
     加载配置文件
     args:
@@ -39,23 +39,32 @@ def load_config(config_path:Path=None, dev_config_path:Path=None) -> dict:
         raise ImportError("yaml is not installed, please install it with `pip install PyYAML`")
 
     is_dev = '--dev' in sys.argv
-    root = Path(sys.argv[0]).parent
-    config_paths: list[Path] = [] 
-    if config_path:
-        config_paths.append(config_path)
-    else:
-        config_paths.append(root / "config.yaml")
+    
+    config_paths: list[Path] = []
+    if global_config:
+        if isinstance(global_config,str):
+            global_config = Path(global_config)
+        if not global_config.exists():
+            raise FileNotFoundError(f"global config file {global_config} not found")
+        config_paths.append(global_config)
+
+    if not config_path:
+        config_path = Path(sys.argv[0]).parent / "config.yaml"
+    elif isinstance(config_path,str):
+        config_path = Path(config_path)
+
+    if not config_path.exists():
+        raise FileNotFoundError(f"config file {config_path} not found")
+        
+    config_paths.append(config_path)
 
     if is_dev:
-        if dev_config_path:
+        dev_config_path = config_path.parent / "config.dev.yaml"
+        if dev_config_path.exists():
             config_paths.append(dev_config_path)
-        elif (root / "config.dev.yaml").exists():
-            config_paths.append(root / "config.dev.yaml")
     
     result = {}
     for item in config_paths:
-        if not item.exists():
-            raise FileNotFoundError(f"config file {item} not found")
         with open(item,"r") as config_file:
             value = yaml.load(config_file, Loader=yaml.FullLoader)
             result = override_config(result, value)

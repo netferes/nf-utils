@@ -42,10 +42,14 @@ dependencies = [
 [project.optional-dependencies]
 env = [
     "python-dotenv>=1.0.0",
+    "PyYAML>=6.0.0",
 ]
 scheduler = [
     "APScheduler>=3.10.0,<4.0.0",
     "tzlocal>=5.0.0",
+]
+wallet = [
+    "hdwallet>=3.6.0"
 ]
 dev = [
     "pytest>=7.0.0",
@@ -53,7 +57,7 @@ dev = [
     "ruff>=0.1.0",
     "mypy>=1.0.0",
 ]
-full = ["nf-utils[env,scheduler]"]
+full = ["nf-utils[env,scheduler,wallet]"]
 all = ["nf-utils[full,dev]"]
 
 [project.urls]
@@ -63,7 +67,7 @@ Documentation = "https://github.com/netfere/nf-utils#readme"
 "Bug Tracker" = "https://github.com/netfere/nf-utils/issues"
 
 [tool.setuptools]
-packages = ["utils"]
+packages = ["utils","utils.wallet"]
 package-dir = {"utils" = "src"}
 
 [tool.setuptools.package-data]

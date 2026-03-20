@@ -5,6 +5,7 @@ Utils - 统一工具类
 
 import asyncio
 import copy
+import hashlib
 import inspect
 import math
 import os
@@ -763,7 +764,9 @@ class Utils(patterns):
             return obj
 
     @staticmethod
-    def get_params(callback: Callable, params: Dict[str, Any]) -> Dict[str, Any]:
+    def get_params(
+        callback: Callable, params: Dict[str, Any], disable_kwargs: bool = False
+    ) -> Dict[str, Any]:
         """
         获取回调函数所需的参数
 
@@ -788,7 +791,9 @@ class Utils(patterns):
                     result[name] = params[name]
 
         # 如果有 **kwargs 参数，添加所有额外参数
-        if any(p.kind == p.VAR_KEYWORD for p in sig.parameters.values()):
+        if not disable_kwargs and any(
+            p.kind == p.VAR_KEYWORD for p in sig.parameters.values()
+        ):
             result.update({k: v for k, v in params.items() if k not in result})
 
         return result
@@ -1039,6 +1044,10 @@ class Utils(patterns):
         return dumps(
             data, indent=indent, ensure_ascii=ensure_ascii, sort_keys=sort_keys
         )
+
+    @staticmethod
+    def short_id(value: str, length: int = 10):
+        return hashlib.sha256(value.encode()).hexdigest()[-length:]
 
 
 # 创建单例实例

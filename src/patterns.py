@@ -34,18 +34,21 @@ class Expression:
         else:
             raise ValueError(f"Invalid pattern type: {type(pattern)}")
 
-        # 验证正则：添加锚定
-        self.match_pattern = re.compile(f"^{self.value}$", flags)
-
     @property
-    def value(self):
+    def value(self)->str:
         return self.pattern.pattern
 
-    def is_valid(self, text: str) -> bool:
-        """验证文本是否完全匹配"""
+    def match(self, text: str,full:bool=False):
         if not text:
             return False
-        return self.match_pattern.match(text) is not None
+        if full:
+            return self.pattern.fullmatch(text)
+        else:
+            return self.pattern.match(text)
+
+    def is_valid(self, text: str,full:bool=True) -> bool:
+        """验证文本是否完全匹配"""
+        return self.match(text,full) is not None
 
     def findall(self, text: str) -> List[str]:
         """
@@ -179,14 +182,24 @@ class DateTimeExpression(Expression):
             {'date': '2024-01-15', 'time': '12:30:45', 'datetime': '2024-01-15 12:30:45', 'raw': {...}}
         """
         if not text:
-            return None
+            return {}
 
         match = self.pattern.search(text)
         if not match:
-            return None
+            return {}
 
         d = match.groupdict()
+        raw = {}
         result = {}
+
+        for key in ["num","unit"]:
+            value = d.get(key)
+            if value is not None:
+                raw[key] = int(value) if key=="num" else value
+
+        if raw.get("num") and raw.get("unit"):
+            _map = {"y": "years", "M": "months", "w": "weeks", "d": "days", "h": "hours", "m": "minutes", "s": "seconds"}
+            result["exp"] = {_map[raw["unit"]]: raw["num"]}
 
         # 合并多个命名组 (y1/y2/y3 -> y, M1/M2/M3 -> M, 等)
         for base_key in ["y", "M", "d", "h", "m", "s", "t", "sep"]:
@@ -194,23 +207,27 @@ class DateTimeExpression(Expression):
                 key = f"{base_key}{suffix}"
                 value = d.get(key)
                 if value is not None:
-                    result[base_key] = value
+                    raw[base_key] = value
                     break
 
-        if not result:
-            return None
+        if not raw:
+            return {}
 
-        if "h" in result and "m" in result and "s" not in result:
-            result["s"] = "00"
+        result["raw"] = raw
 
-        date = None
-        if "y" in result and "M" in result and "d" in result:
-            date = f"{result['y']}-{result['M']}-{result['d']}"
-        time = None
-        if "h" in result and "m" in result and "s" in result:
-            time = f"{result['h']}:{result['m']}:{result['s']}"
+        if "h" in raw and "m" in raw and "s" not in raw:
+            raw["s"] = "00"
 
-        return {"date": date, "time": time,"datetime": f"{date} {time}" if date and time else None,"raw":result}
+        if "y" in raw and "M" in raw and "d" in raw:
+            result["date"] = f"{raw['y']}-{raw['M']}-{raw['d']}"
+            
+        if "h" in raw and "m" in raw and "s" in raw:
+            result["time"] = f"{raw['h']}:{raw['m']}:{raw['s']}"
+
+        if "date" in result and "time" in result:
+            result["datetime"] = f"{result['date']} {result['time']}"
+
+        return result
 
 
 class patterns:
@@ -369,7 +386,7 @@ class patterns:
         r"(?P<h1>[0-1][0-9]|2[0-3]):(?P<m1>[0-5][0-9])(?::(?P<s1>[0-5][0-9]))?|"
         # 纯数字日期 + 空格/T + 纯数字时间
         r"(?P<y2>[1-3][0-9]{3})(?P<M2>0[1-9]|1[0-2])(?P<d2>[0-2][0-9]|3[01])"
-        r"(?P<t2>[\sT])"
+        r"(?P<t2>[\sT])?"
         r"(?P<h2>[0-1][0-9]|2[0-3])(?P<m2>[0-5][0-9])(?P<s2>[0-5][0-9])?"
         r")"
     )
@@ -377,7 +394,8 @@ class patterns:
     # 日期表达式（相对时间偏移）
     # 支持格式：-3d, +2M, 5y, -1h, +30m, -15s, 2w
     # 单位：y(年), M(月), w(周), d(日), h(时), m(分), s(秒)
-    date_exp = Expression(r"[+-]?\d+[yMwdhms]")
+    #date_exp = Expression(r"[+-]?\d+[yMwdhms]")
+    date_exp = DateTimeExpression(r"(?P<num>[+-]?\d+)(?P<unit>[yMwdhms])")
 
     # ========== 账号相关 ==========
 
